@@ -29,6 +29,9 @@ body {
     height: 88px;
     background-color: var(--navbar);
     border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .navbar {
@@ -433,5 +436,162 @@ body {
 
     .bottom-pattern {
         height: 48px;
+    }
+}
+
+section[id] {
+    scroll-margin-top: 88px;
+}
+
+.tentang {
+    width: 100%;
+    background-color: var(--background);
+    border-top: 1px solid var(--line);
+}
+
+.tentang-inner {
+    padding: 90px 119px 100px 74px;
+}
+
+.section-eyebrow {
+    margin-bottom: 8px;
+    color: var(--heading);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.section-title {
+    margin-bottom: 48px;
+    color: var(--title);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 56px;
+    font-weight: normal;
+    letter-spacing: -1px;
+}
+
+.tentang-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    align-items: stretch; /* biar tinggi kartu berbeda-beda disamakan */
+}
+
+.tentang-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.tentang-card-image {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: block;
+    object-fit: cover;
+    background-color: #e2c9a8;
+}
+
+.tentang-card-box {
+    background-color: #f7efe0;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--brown);
+    padding: 20px 18px 22px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.tentang-card-number {
+    margin-bottom: 4px;
+    color: var(--brown);
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.tentang-card-title {
+    margin-bottom: 10px;
+    color: var(--title);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.tentang-card-desc {
+    color: var(--brown);
+    font-size: 15px;
+    line-height: 1.55;
+    text-align: justify; /* rata kanan-kiri */
+}
+
+.placeholder {
+    border: 2px dashed var(--brown);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 8px;
+    background-image: repeating-linear-gradient(
+        45deg,
+        #e2c9a8,
+        #e2c9a8 10px,
+        #d9bb95 10px,
+        #d9bb95 20px
+    );
+}
+
+.placeholder::after {
+    content: "Foto: " attr(data-file);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-style: italic;
+    color: var(--title);
+    background-color: rgba(243, 229, 213, 0.85);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+@media (max-width: 1250px) {
+    .tentang-inner {
+        padding: 70px 60px 80px;
+    }
+
+    .section-title {
+        font-size: 44px;
+    }
+}
+
+@media (max-width: 980px) {
+    .tentang-inner {
+        padding: 60px 45px 70px;
+    }
+
+    .tentang-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 28px;
+    }
+
+    .section-title {
+        font-size: 38px;
+    }
+}
+
+@media (max-width: 650px) {
+    .tentang-inner {
+        padding: 50px 22px 60px;
+    }
+
+    .section-eyebrow {
+        font-size: 18px;
+    }
+
+    .section-title {
+        font-size: 30px;
+        margin-bottom: 32px;
+    }
+
+    .tentang-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
     }
 }
