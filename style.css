@@ -595,3 +595,297 @@ section[id] {
         gap: 32px;
     }
 }
+
+.proses {
+    width: 100%;
+    background-color: var(--background);
+    border-top: 1px solid var(--line);
+}
+
+.proses-inner {
+    padding: 90px 119px 100px 74px;
+}
+
+.proses .section-title {
+    margin-bottom: 12px;
+}
+
+.proses-subtitle {
+    margin-bottom: 56px;
+    color: var(--heading);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.proses-steps {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 48px;
+}
+
+/* garis putus-putus penghubung antar ikon */
+.proses-steps::before {
+    content: "";
+    position: absolute;
+    top: 54px;
+    left: 60px;
+    right: 60px;
+    border-top: 3px dashed var(--heading);
+}
+
+.proses-step {
+    position: relative;
+    z-index: 1;
+    width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.proses-step-icon {
+    width: 108px;
+    height: 108px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--brown);
+    border-radius: 50%;
+    background-color: var(--navbar);
+    transition: 0.2s ease;
+}
+
+.proses-step-icon img {
+    width: 72%;
+    height: 72%;
+    object-fit: contain;
+}
+
+.proses-step-label {
+    color: var(--heading);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 17px;
+    font-weight: bold;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.proses-step:hover .proses-step-icon {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 14px rgba(61, 46, 31, 0.18);
+}
+
+.proses-step.active .proses-step-icon {
+    border-width: 5px;
+    border-color: var(--heading);
+    background-color: #f7efe0;
+    box-shadow: 0 6px 14px rgba(61, 46, 31, 0.22);
+}
+
+.proses-step:focus-visible {
+    outline: 2px solid var(--heading);
+    outline-offset: 4px;
+    border-radius: 8px;
+}
+
+.proses-detail {
+    max-width: 1070px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 390px 1fr;
+    gap: 16px;
+    align-items: stretch;
+}
+
+.proses-detail-image {
+    width: 100%;
+    height: 100%;
+    min-height: 456px;
+    display: block;
+    object-fit: cover;
+    background-color: #e2c9a8;
+}
+
+.proses-detail-box {
+    background-color: #f7efe0;
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 12px rgba(61, 46, 31, 0.1);
+    padding: 28px 40px 36px 28px;
+}
+
+.proses-detail-badge {
+    display: inline-block;
+    margin-bottom: 30px;
+    padding: 10px 22px;
+    color: #fff;
+    background-color: var(--brown);
+    font-size: 15px;
+}
+
+.proses-detail-number {
+    margin-bottom: 8px;
+    color: var(--brown);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px;
+    font-style: italic;
+}
+
+.proses-detail-title {
+    margin-bottom: 18px;
+    color: var(--title);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 42px;
+    font-weight: bold;
+}
+
+.proses-detail-desc {
+    color: var(--brown);
+    font-size: 15px;
+    line-height: 1.55;
+    text-align: justify;
+}
+
+/* efek saat konten langkah berganti */
+.proses-detail.is-changing .proses-detail-image,
+.proses-detail.is-changing .proses-detail-box > * {
+    opacity: 0;
+}
+
+.proses-detail-image,
+.proses-detail-box > * {
+    transition: opacity 0.2s ease;
+}
+
+@media (max-width: 1250px) {
+    .proses-inner {
+        padding: 70px 60px 80px;
+    }
+
+    .proses-step {
+        width: 100px;
+    }
+
+    .proses-step-icon {
+        width: 88px;
+        height: 88px;
+    }
+
+    .proses-steps::before {
+        top: 44px;
+        left: 50px;
+        right: 50px;
+    }
+
+    .proses-step-label {
+        font-size: 15px;
+    }
+
+    .proses-detail {
+        grid-template-columns: 340px 1fr;
+    }
+
+    .proses-detail-title {
+        font-size: 36px;
+    }
+}
+
+@media (max-width: 980px) {
+    .proses-inner {
+        padding: 60px 45px 70px;
+    }
+
+    .proses-subtitle {
+        font-size: 18px;
+        margin-bottom: 40px;
+    }
+
+    .proses-step {
+        width: 84px;
+    }
+
+    .proses-step-icon {
+        width: 68px;
+        height: 68px;
+    }
+
+    .proses-step.active .proses-step-icon {
+        border-width: 4px;
+    }
+
+    .proses-steps::before {
+        top: 34px;
+        left: 42px;
+        right: 42px;
+        border-top-width: 2px;
+    }
+
+    .proses-step-label {
+        font-size: 13px;
+    }
+
+    .proses-detail {
+        grid-template-columns: 1fr;
+        max-width: 620px;
+    }
+
+    .proses-detail-image {
+        min-height: 0;
+        height: auto;
+        aspect-ratio: 4 / 3;
+    }
+}
+
+@media (max-width: 650px) {
+    .proses-inner {
+        padding: 50px 22px 60px;
+    }
+
+    .proses-subtitle {
+        font-size: 16px;
+        margin-bottom: 32px;
+    }
+
+    /* di layar kecil, deretan ikon bisa digeser ke samping */
+    .proses-steps {
+        justify-content: flex-start;
+        gap: 14px;
+        overflow-x: auto;
+        margin: 0 -22px 32px;
+        padding: 6px 22px 10px;
+        scrollbar-width: none;
+    }
+
+    .proses-steps::-webkit-scrollbar {
+        display: none;
+    }
+
+    .proses-steps::before {
+        display: none;
+    }
+
+    .proses-step {
+        flex-shrink: 0;
+    }
+
+    .proses-detail-box {
+        padding: 24px 20px 28px;
+    }
+
+    .proses-detail-badge {
+        margin-bottom: 20px;
+    }
+
+    .proses-detail-number {
+        font-size: 17px;
+    }
+
+    .proses-detail-title {
+        font-size: 30px;
+    }
+}
