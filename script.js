@@ -5,6 +5,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!sections.length || !navLinks.length) return;
 
   function setActiveLink(id) {
+    // section yang ga ada di navbar (misal fakta menarik) ga usah ganti garis bawahnya
+    const ada = [...navLinks].some((link) => link.getAttribute("href") === `#${id}`);
+    if (!ada) return;
+
     navLinks.forEach((link) => {
       link.classList.toggle("active", link.getAttribute("href") === `#${id}`);
     });
@@ -27,99 +31,520 @@ document.addEventListener("DOMContentLoaded", () => {
   sections.forEach((section) => observer.observe(section));
 });
 
+// isi teks hero + kartu tentang sagu dari data yang diatur di dashboard
 document.addEventListener("DOMContentLoaded", () => {
-  const steps = document.querySelectorAll(".proses-step");
+  const { esc, pad } = SaguUtil;
+  const grid = document.querySelector(".tentang-grid");
+
+  function renderSettings(settings) {
+    document.querySelectorAll("[data-setting]").forEach((el) => {
+      const value = settings[el.dataset.setting];
+      if (value) el.textContent = value;
+    });
+    document.title = settings.siteName;
+  }
+
+  function renderTentang(cards) {
+    if (!grid) return;
+    grid.innerHTML = cards.map((card, i) => `
+      <article class="tentang-card">
+        <img class="tentang-card-image" src="${esc(card.image)}" alt="${esc(card.title)}">
+        <div class="tentang-card-box">
+          <p class="tentang-card-number">${pad(i + 1)} —</p>
+          <h3 class="tentang-card-title">${esc(card.title)}</h3>
+          <p class="tentang-card-desc">${esc(card.description)}</p>
+        </div>
+      </article>`).join("");
+  }
+
+  function renderAll() {
+    const db = SaguStore.load();
+    renderSettings(db.settings);
+    renderTentang(db.aboutCards);
+  }
+
+  renderAll();
+
+  // kalau admin nyimpen sesuatu di tab lain, halaman ini langsung ikut berubah
+  window.addEventListener("storage", (e) => {
+    if (e.key === SaguStore.DB_KEY) renderAll();
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const stepsBox = document.querySelector(".proses-steps");
   const detail = document.querySelector(".proses-detail");
 
-  if (!steps.length || !detail) return;
+  if (!stepsBox || !detail) return;
 
-  const prosesData = [
-    {
-      title: "Pohon Sagu",
-      image: "assets/images/proses-pohon-sagu.jpg",
-      alt: "Pohon sagu yang siap dipanen",
-      desc: "Pohon sagu (Metroxylon sagu) umumnya dipilih pada usia 8–12 tahun, ketika kandungan pati di dalam batang telah mencapai titik maksimal. Salah satu tanda bahwa pohon telah memasuki masa siap panen adalah munculnya kuncup bunga pada bagian pucuk. Pada tahap ini, batang sagu memiliki cadangan pati yang cukup tinggi sehingga lebih optimal untuk diolah menjadi tepung sagu. Setelah pohon yang sesuai dipilih, batang kemudian ditebang dan dipersiapkan untuk memasuki tahap pengolahan berikutnya, yaitu pengupasan dan pengambilan empulur.",
-    },
-    {
-      title: "Penebangan",
-      image: "assets/images/proses-penebangan.jpg",
-      alt: "Batang pohon sagu yang sedang ditebang",
-      desc: "Pohon sagu yang telah siap panen ditebang menggunakan kapak atau gergaji pada bagian pangkal batang, dekat permukaan tanah. Setelah rebah, pelepah dan daunnya dibersihkan, lalu batang dipotong menjadi beberapa gelondong sepanjang 1–2 meter agar mudah diangkut. Gelondong ini biasanya dihanyutkan melalui sungai atau kanal menuju tempat pengolahan. Penebangan dilakukan secara selektif sehingga anakan sagu di sekitarnya tetap tumbuh dan hutan sagu dapat terus lestari.",
-    },
-    {
-      title: "Pengambilan Empulur",
-      image: "assets/images/proses-empulur.jpg",
-      alt: "Empulur batang sagu yang sedang diparut",
-      desc: "Gelondong batang sagu dibelah memanjang untuk membuka bagian dalamnya. Empulur, yaitu jaringan lunak berwarna putih kekuningan yang menyimpan pati, kemudian dipangkur atau diparut menggunakan alat tradisional dari kayu atau bambu hingga menjadi serpihan halus. Di beberapa daerah, proses ini kini dibantu mesin parut agar lebih cepat. Serpihan empulur yang dihasilkan ditampung dan siap dibawa ke tahap penyaringan untuk memisahkan pati dari seratnya.",
-    },
-    {
-      title: "Penyaringan",
-      image: "assets/images/proses-penyaringan.jpg",
-      alt: "Proses penyaringan pati sagu dengan air",
-      desc: "Serpihan empulur dicampur dengan air, lalu diremas dan diinjak di atas saringan kain yang dipasang pada wadah dari pelepah sagu. Air yang membawa butiran pati mengalir dan tertampung di bak pengendapan, sedangkan ampas serat tertinggal di atas saringan. Proses ini diulang beberapa kali hingga pati benar-benar terpisah. Setelah didiamkan, pati akan mengendap di dasar wadah dan air di atasnya dibuang secara perlahan.",
-    },
-    {
-      title: "Pengeringan",
-      image: "assets/images/proses-pengeringan.jpg",
-      alt: "Pati sagu yang sedang dijemur di bawah sinar matahari",
-      desc: "Endapan pati sagu yang masih basah diambil dan dijemur di bawah sinar matahari di atas tikar atau nampan lebar. Selama pengeringan, pati diratakan dan dibalik secara berkala agar kering merata dan tidak berjamur. Proses ini dapat berlangsung satu hingga beberapa hari tergantung cuaca. Kadar air yang rendah membuat tepung sagu lebih awet disimpan, meskipun sebagian masyarakat juga menyimpan sagu basah yang dibungkus daun dalam wadah tumang.",
-    },
-    {
-      title: "Tepung Sagu",
-      image: "assets/images/proses-tepung-sagu.jpg",
-      alt: "Tepung sagu putih yang sudah jadi",
-      desc: "Pati yang telah kering kemudian ditumbuk atau digiling hingga halus, lalu diayak untuk menghasilkan tepung sagu yang putih dan lembut. Tepung ini dikemas dalam karung atau wadah tertutup agar terhindar dari kelembapan. Tepung sagu kaya karbohidrat, bebas gluten, dan dapat disimpan dalam waktu lama. Selain untuk konsumsi rumah tangga, tepung sagu juga dijual ke pasar dan menjadi bahan baku berbagai industri pangan.",
-    },
-    {
-      title: "Penyajian",
-      image: "assets/images/proses-penyajian.jpg",
-      alt: "Hidangan olahan sagu yang siap disantap",
-      desc: "Tepung sagu siap diolah menjadi beragam hidangan khas Nusantara. Di Papua dan Maluku, sagu diseduh dengan air panas menjadi papeda yang kental dan disantap bersama ikan kuah kuning. Sagu juga dipanggang menjadi sagu lempeng, dibuat bagea yang renyah, hingga diolah menjadi kapurung khas Sulawesi. Keragaman olahan ini menunjukkan bahwa sagu bukan sekadar bahan pangan, melainkan bagian penting dari budaya masyarakat Indonesia timur.",
-    },
-  ];
-
+  const { esc } = SaguUtil;
   const image = detail.querySelector(".proses-detail-image");
   const badge = detail.querySelector(".proses-detail-badge");
   const number = detail.querySelector(".proses-detail-number");
   const title = detail.querySelector(".proses-detail-title");
   const desc = detail.querySelector(".proses-detail-desc");
 
-  // muat semua foto lebih dulu supaya pergantian foto tidak berkedip
-  prosesData.forEach((item) => {
-    new Image().src = item.image;
-  });
-
+  // data tahapnya sekarang diambil dari dashboard (processingSteps)
+  let prosesData = [];
   let currentStep = 0;
   let changeTimer;
+
+  function fillDetail(index) {
+    const data = prosesData[index];
+    const stepNumber = String(index + 1).padStart(2, "0");
+    image.src = data.image;
+    image.alt = data.title;
+    badge.textContent = `Langkah ${index + 1} dari ${prosesData.length}`;
+    number.textContent = `${stepNumber} — ${data.title}`;
+    title.textContent = data.title;
+    desc.textContent = data.description;
+  }
+
+  function renderSteps() {
+    prosesData = SaguStore.load().processingSteps;
+    if (currentStep >= prosesData.length) currentStep = 0;
+
+    stepsBox.innerHTML = prosesData.map((step, i) => `
+      <button class="proses-step ${i === currentStep ? "active" : ""}" type="button" data-step="${i}" aria-pressed="${i === currentStep}">
+        <span class="proses-step-icon">
+          <img src="${esc(step.icon)}" alt="">
+        </span>
+        <span class="proses-step-label">${esc(step.title)}</span>
+      </button>`).join("");
+
+    detail.hidden = !prosesData.length;
+    if (!prosesData.length) return;
+
+    // muat semua foto lebih dulu supaya pergantian foto tidak berkedip
+    prosesData.forEach((item) => {
+      new Image().src = item.image;
+    });
+
+    fillDetail(currentStep);
+  }
 
   function showStep(index) {
     if (index === currentStep) return;
     currentStep = index;
 
-    steps.forEach((step, i) => {
+    stepsBox.querySelectorAll(".proses-step").forEach((step, i) => {
       step.classList.toggle("active", i === index);
       step.setAttribute("aria-pressed", i === index);
     });
-
-    const data = prosesData[index];
-    const stepNumber = String(index + 1).padStart(2, "0");
 
     detail.classList.add("is-changing");
     clearTimeout(changeTimer);
 
     changeTimer = setTimeout(() => {
-      image.src = data.image;
-      image.alt = data.alt;
-      badge.textContent = `Langkah ${index + 1} dari ${prosesData.length}`;
-      number.textContent = `${stepNumber} — ${data.title}`;
-      title.textContent = data.title;
-      desc.textContent = data.desc;
+      fillDetail(index);
       detail.classList.remove("is-changing");
     }, 200);
   }
 
-  steps.forEach((step, i) => {
-    step.setAttribute("aria-pressed", i === 0);
-    step.addEventListener("click", () => showStep(i));
+  // tombolnya dibuat ulang tiap data berubah, jadi klik nya ditangkep dari kotak luarnya
+  stepsBox.addEventListener("click", (e) => {
+    const step = e.target.closest(".proses-step");
+    if (step) showStep(Number(step.dataset.step));
+  });
+
+  renderSteps();
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === SaguStore.DB_KEY) renderSteps();
+  });
+});
+
+// kuliner: kartu + cari + filter + popup detail
+document.addEventListener("DOMContentLoaded", () => {
+  const grid = document.getElementById("kulinerGrid");
+  if (!grid) return;
+
+  const { esc } = SaguUtil;
+  const search = document.getElementById("kulinerSearch");
+  const filterWilayah = document.getElementById("filterWilayah");
+  const filterKategori = document.getElementById("filterKategori");
+  const filterPenyajian = document.getElementById("filterPenyajian");
+  const info = document.getElementById("kulinerInfo");
+  const modal = document.getElementById("kulinerModal");
+  const modalBody = document.getElementById("kulinerModalBody");
+
+  const pinIcon = '<svg viewBox="0 0 12 16" aria-hidden="true"><path d="M6 0a6 6 0 0 0-6 6c0 4.5 6 10 6 10s6-5.5 6-10a6 6 0 0 0-6-6zm0 8.2A2.2 2.2 0 1 1 6 3.8a2.2 2.2 0 0 1 0 4.4z"/></svg>';
+
+  let foods = [];
+
+  const unik = (list) => [...new Set(list.filter(Boolean))];
+
+  // isi pilihan dropdown, pilihan yang lagi dipilih tetep dipertahanin
+  function isiDropdown(select, values) {
+    const sekarang = select.value;
+    select.innerHTML = `<option value="Semua">Semua</option>` +
+      values.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    select.value = values.includes(sekarang) ? sekarang : "Semua";
+  }
+
+  function loadData() {
+    const db = SaguStore.load();
+    foods = db.foods;
+
+    isiDropdown(filterWilayah, unik([...db.regions.map((r) => r.name), ...foods.map((f) => f.region)]));
+    isiDropdown(filterKategori, unik([...db.foodOptions.kategori, ...foods.map((f) => f.category)]));
+    isiDropdown(filterPenyajian, unik([...db.foodOptions.penyajian, ...foods.map((f) => f.servingType)]));
+
+    renderCards();
+  }
+
+  function getHasil() {
+    const kata = search.value.trim().toLowerCase();
+
+    return foods.filter((f) => {
+      const teks = [f.name, f.region, f.category, f.servingType, f.description, (f.ingredients || []).join(" ")]
+        .join(" ").toLowerCase();
+
+      return (!kata || teks.includes(kata))
+        && (filterWilayah.value === "Semua" || f.region === filterWilayah.value)
+        && (filterKategori.value === "Semua" || f.category === filterKategori.value)
+        && (filterPenyajian.value === "Semua" || f.servingType === filterPenyajian.value);
+    });
+  }
+
+  function renderCards() {
+    const hasil = getHasil();
+
+    info.textContent = hasil.length === foods.length
+      ? `Menampilkan ${foods.length} kuliner`
+      : `Menampilkan ${hasil.length} dari ${foods.length} kuliner`;
+
+    if (!hasil.length) {
+      grid.innerHTML = `<p class="kuliner-empty">Kuliner yang kamu cari belum ada. Coba kata kunci lain atau ubah filternya.</p>`;
+      return;
+    }
+
+    grid.innerHTML = hasil.map((f) => `
+      <article class="kuliner-card">
+        <img class="kuliner-card-image" src="${esc(f.image)}" alt="${esc(f.name)}" loading="lazy">
+        <div class="kuliner-card-box">
+          <p class="kuliner-card-region">${pinIcon}${esc(f.region)}</p>
+          <h3 class="kuliner-card-title">${esc(f.name)}</h3>
+          <p class="kuliner-card-desc">${esc(f.description)}</p>
+          <div class="kuliner-card-tags">
+            <span class="kuliner-tag">${esc(f.servingType)}</span>
+            <span class="kuliner-tag">${esc(f.category)}</span>
+          </div>
+          <button type="button" class="kuliner-card-button" data-food="${esc(f.id)}">Lihat Detail →</button>
+        </div>
+      </article>`).join("");
+  }
+
+  function bukaDetail(id) {
+    const f = foods.find((x) => x.id === id);
+    if (!f) return;
+
+    modalBody.innerHTML = `
+      <img class="kuliner-modal-image" src="${esc(f.image)}" alt="${esc(f.name)}">
+      <div class="kuliner-modal-content">
+        <p class="kuliner-modal-region">${esc(f.region)} · ${esc(f.category)} · ${esc(f.servingType)}</p>
+        <h3 class="kuliner-modal-title" id="kulinerModalTitle">${esc(f.name)}</h3>
+        <p class="kuliner-modal-text">${esc(f.story)}</p>
+
+        <h4 class="kuliner-modal-heading">Bahan Utama</h4>
+        <div class="chip-list">${(f.ingredients || []).map((b) => `<span class="chip">${esc(b)}</span>`).join("")}</div>
+
+        <h4 class="kuliner-modal-heading">Cara Pembuatan Singkat</h4>
+        <p class="kuliner-modal-text">${esc(f.preparation)}</p>
+
+        <h4 class="kuliner-modal-heading">Fakta Unik</h4>
+        <p class="kuliner-modal-text">${esc(f.fact)}</p>
+      </div>`;
+    modal.showModal();
+  }
+
+  search.addEventListener("input", renderCards);
+  [filterWilayah, filterKategori, filterPenyajian].forEach((select) => {
+    select.addEventListener("change", renderCards);
+  });
+
+  grid.addEventListener("click", (e) => {
+    const tombol = e.target.closest("[data-food]");
+    if (tombol) bukaDetail(tombol.dataset.food);
+  });
+
+  // tutup popup kalau klik tombol x atau klik di luar kotaknya
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal || e.target.closest("[data-close]")) modal.close();
+  });
+
+  loadData();
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === SaguStore.DB_KEY) loadData();
+  });
+});
+
+// persebaran: daftar wilayah di kiri, detailnya di kanan
+document.addEventListener("DOMContentLoaded", () => {
+  const list = document.getElementById("wilayahList");
+  const detail = document.getElementById("wilayahDetail");
+  if (!list || !detail) return;
+
+  const { esc } = SaguUtil;
+  const arrowIcon = '<svg class="wilayah-arrow" viewBox="0 0 12 20" aria-hidden="true"><path d="M2 2l8 8-8 8"/></svg>';
+
+  let regions = [];
+  let activeId = null; // awalnya belum ada wilayah yang dipilih
+  let changeTimer;
+
+  function renderList() {
+    list.innerHTML = regions.map((r) => `
+      <button type="button" class="wilayah-button ${r.id === activeId ? "active" : ""}" data-region="${esc(r.id)}" aria-pressed="${r.id === activeId}">
+        <img class="wilayah-map" src="${esc(r.mapIcon)}" alt="">
+        <span>${esc(r.name)}</span>
+        ${arrowIcon}
+      </button>`).join("");
+  }
+
+  function renderDetail() {
+    const index = regions.findIndex((r) => r.id === activeId);
+    const r = regions[index];
+
+    if (!r) {
+      detail.innerHTML = `
+        <div class="wilayah-empty">
+          <img src="assets/images/logo-sagu.png" alt="">
+          <p>Pilih salah satu wilayah untuk melihat makanan khas dan fakta uniknya.</p>
+        </div>`;
+      return;
+    }
+
+    detail.innerHTML = `
+      <img class="wilayah-image" src="${esc(r.image)}" alt="Suasana wilayah ${esc(r.name)}">
+      <div class="wilayah-box">
+        <p class="wilayah-badge">Wilayah ${index + 1} dari ${regions.length}</p>
+        <h3 class="wilayah-title">${esc(r.name)}</h3>
+        <p class="wilayah-text">${esc(r.description)}</p>
+
+        <h4 class="wilayah-heading">Makanan Khas Sagu</h4>
+        <div class="chip-list">${(r.foods || []).map((f) => `<span class="chip">${esc(f)}</span>`).join("")}</div>
+
+        <h4 class="wilayah-heading">Fakta Unik</h4>
+        <p class="wilayah-text">${esc(r.facts)}</p>
+      </div>`;
+  }
+
+  function loadData() {
+    regions = SaguStore.load().regions;
+    if (!regions.some((r) => r.id === activeId)) activeId = null;
+    renderList();
+    renderDetail();
+  }
+
+  list.addEventListener("click", (e) => {
+    const tombol = e.target.closest("[data-region]");
+    if (!tombol || tombol.dataset.region === activeId) return;
+
+    activeId = tombol.dataset.region;
+    renderList();
+
+    // efek pudar dikit pas ganti wilayah
+    detail.classList.add("is-changing");
+    clearTimeout(changeTimer);
+    changeTimer = setTimeout(() => {
+      renderDetail();
+      detail.classList.remove("is-changing");
+    }, 180);
+  });
+
+  loadData();
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === SaguStore.DB_KEY) loadData();
+  });
+});
+
+// fakta menarik: ganti-ganti fakta pake tombol
+document.addEventListener("DOMContentLoaded", () => {
+  const text = document.getElementById("faktaText");
+  const counter = document.getElementById("faktaCounter");
+  const prev = document.getElementById("faktaPrev");
+  const next = document.getElementById("faktaNext");
+  if (!text) return;
+
+  let facts = [];
+  let index = 0;
+  let changeTimer;
+
+  function tampilkan() {
+    if (!facts.length) {
+      text.textContent = "Belum ada fakta.";
+      counter.textContent = "Fakta 0 dari 0";
+      prev.disabled = true;
+      next.disabled = true;
+      return;
+    }
+    if (index >= facts.length) index = 0;
+    text.textContent = facts[index].text;
+    counter.textContent = `Fakta ${index + 1} dari ${facts.length}`;
+    prev.disabled = facts.length < 2;
+    next.disabled = facts.length < 2;
+  }
+
+  function geser(arah) {
+    if (facts.length < 2) return;
+    index = (index + arah + facts.length) % facts.length;
+
+    text.classList.add("is-changing");
+    clearTimeout(changeTimer);
+    changeTimer = setTimeout(() => {
+      tampilkan();
+      text.classList.remove("is-changing");
+    }, 200);
+  }
+
+  function loadData() {
+    facts = SaguStore.load().facts;
+    tampilkan();
+  }
+
+  prev.addEventListener("click", () => geser(-1));
+  next.addEventListener("click", () => geser(1));
+
+  loadData();
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === SaguStore.DB_KEY) loadData();
+  });
+});
+
+// quiz
+// jawaban benar -> hijau, bisa lanjut. jawaban salah -> merah, bisa coba lagi
+// tapi poinnya cuma dapet kalau benar di percobaan pertama
+document.addEventListener("DOMContentLoaded", () => {
+  const card = document.getElementById("quizCard");
+  if (!card) return;
+
+  const { esc } = SaguUtil;
+  const huruf = ["A", "B", "C", "D"];
+
+  let quizzes = [];
+  let index = 0;
+  let score = 0;
+  let pernahSalah = false;
+  let mode = null; // "next" | "retry" | "finish"
+
+  const poin = () => Math.round(100 / Math.max(quizzes.length, 1));
+
+  function mulaiUlang() {
+    index = 0;
+    score = 0;
+    pernahSalah = false;
+    mode = null;
+    renderSoal();
+  }
+
+  function renderSoal() {
+    if (!quizzes.length) {
+      card.innerHTML = `<p class="quiz-question">Belum ada pertanyaan quiz.</p>`;
+      return;
+    }
+
+    const q = quizzes[index];
+    const persen = (index / quizzes.length) * 100;
+
+    card.innerHTML = `
+      <div class="quiz-top">
+        <span class="quiz-badge">Pertanyaan ${index + 1} dari ${quizzes.length}</span>
+        <span class="quiz-score">Skor: ${score}</span>
+      </div>
+      <div class="quiz-progress"><span style="width: ${persen}%"></span></div>
+
+      <p class="quiz-question">${esc(q.question)}</p>
+
+      <div class="quiz-options">
+        ${huruf.map((h) => `
+          <button type="button" class="quiz-option" data-answer="${h}">
+            <span class="quiz-letter">${h}</span>
+            <span>${esc(q["option" + h])}</span>
+          </button>`).join("")}
+      </div>
+
+      <div class="quiz-bottom">
+        <p class="quiz-feedback" id="quizFeedback"></p>
+        <button type="button" class="btn btn-primary" id="quizAction" hidden></button>
+      </div>`;
+  }
+
+  function jawab(pilihan, tombol) {
+    const q = quizzes[index];
+    const benar = pilihan === q.correct;
+
+    card.querySelectorAll(".quiz-option").forEach((b) => (b.disabled = true));
+    tombol.classList.add(benar ? "benar" : "salah");
+
+    if (benar && !pernahSalah) score += poin();
+    if (!benar) pernahSalah = true;
+
+    card.querySelector(".quiz-score").textContent = `Skor: ${score}`;
+
+    const feedback = document.getElementById("quizFeedback");
+    if (benar) {
+      feedback.textContent = pernahSalah
+        ? "Benar! Tapi poin cuma dihitung kalau benar di percobaan pertama."
+        : "Benar! Jawaban kamu tepat.";
+    } else {
+      feedback.textContent = "Jawaban kamu kurang tepat, coba lagi ya.";
+    }
+
+    const terakhir = index === quizzes.length - 1;
+    mode = benar ? (terakhir ? "finish" : "next") : "retry";
+
+    const label = { next: "Pertanyaan Berikutnya →", finish: "Lihat Skor Akhir", retry: "Coba Lagi" };
+    const action = document.getElementById("quizAction");
+    action.textContent = label[mode];
+    action.className = mode === "retry" ? "btn btn-outline" : "btn btn-primary";
+    action.hidden = false;
+    action.focus({ preventScroll: true });
+  }
+
+  function renderHasil() {
+    const max = poin() * quizzes.length;
+    const rasio = score / max;
+    const pesan = rasio === 1 ? "Sempurna! Kamu benar-benar paham tentang sagu Nusantara."
+      : rasio >= 0.6 ? "Bagus! Pengetahuanmu tentang sagu sudah cukup luas."
+      : "Masih ada yang bisa dipelajari. Jelajahi lagi halaman ini lalu coba ulang quiznya.";
+
+    card.innerHTML = `
+      <div class="quiz-result">
+        <p class="quiz-result-label">Skor Akhir Kamu</p>
+        <p class="quiz-result-score">${score}<small>/${max}</small></p>
+        <p class="quiz-result-text">${pesan}</p>
+        <button type="button" class="btn btn-primary" data-restart>Ulangi Quiz</button>
+      </div>`;
+  }
+
+  card.addEventListener("click", (e) => {
+    const opsi = e.target.closest("[data-answer]");
+    if (opsi && !opsi.disabled) jawab(opsi.dataset.answer, opsi);
+
+    if (e.target.closest("[data-restart]")) mulaiUlang();
+
+    if (e.target.closest("#quizAction")) {
+      if (mode === "retry") renderSoal();
+      if (mode === "next") {
+        index++;
+        pernahSalah = false;
+        renderSoal();
+      }
+      if (mode === "finish") renderHasil();
+    }
+  });
+
+  function loadData() {
+    quizzes = SaguStore.load().quizzes;
+    mulaiUlang();
+  }
+
+  loadData();
+
+  window.addEventListener("storage", (e) => {
+    if (e.key === SaguStore.DB_KEY) loadData();
   });
 });
