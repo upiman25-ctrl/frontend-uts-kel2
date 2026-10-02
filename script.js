@@ -360,43 +360,115 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// fakta menarik: ganti-ganti fakta pake tombol
+// fakta menarik: foto + teks, tombol ganti fakta, sama tombol like / dislike
 document.addEventListener("DOMContentLoaded", () => {
+  const card = document.getElementById("faktaCard");
+  if (!card) return;
+
   const text = document.getElementById("faktaText");
+  const image = document.getElementById("faktaImage");
   const counter = document.getElementById("faktaCounter");
   const prev = document.getElementById("faktaPrev");
   const next = document.getElementById("faktaNext");
-  if (!text) return;
+  const likeBtn = document.getElementById("faktaLike");
+  const dislikeBtn = document.getElementById("faktaDislike");
+  const likeCount = document.getElementById("faktaLikeCount");
+  const dislikeCount = document.getElementById("faktaDislikeCount");
+
+  // pilihan like / dislike pengunjung disimpen terpisah dari data dashboard
+  // isinya kayak gini: { fc1: "like", fc4: "dislike" }
+  const VOTE_KEY = "webSagu_factVotes";
 
   let facts = [];
   let index = 0;
   let changeTimer;
 
+  function bacaVote() {
+    try { return JSON.parse(localStorage.getItem(VOTE_KEY)) || {}; }
+    catch { return {}; }
+  }
+
+  function simpanVote(votes) {
+    try { localStorage.setItem(VOTE_KEY, JSON.stringify(votes)); }
+    catch { /* kalau gagal ya udah, angkanya cuma ga kesimpen */ }
+  }
+
+  // muat foto fakta sebelum & sesudahnya biar pas diklik ga nunggu lama
+  function muatTetangga() {
+    [index - 1, index + 1].forEach((i) => {
+      const f = facts[(i + facts.length) % facts.length];
+      if (f && f.image) new Image().src = f.image;
+    });
+  }
+
+  function renderVote() {
+    const f = facts[index];
+    const pilihan = bacaVote()[f.id];
+
+    likeCount.textContent = (f.likes || 0) + (pilihan === "like" ? 1 : 0);
+    dislikeCount.textContent = (f.dislikes || 0) + (pilihan === "dislike" ? 1 : 0);
+
+    likeBtn.classList.toggle("active", pilihan === "like");
+    dislikeBtn.classList.toggle("active", pilihan === "dislike");
+    likeBtn.setAttribute("aria-pressed", pilihan === "like");
+    dislikeBtn.setAttribute("aria-pressed", pilihan === "dislike");
+  }
+
   function tampilkan() {
-    if (!facts.length) {
+    const kosong = !facts.length;
+    [prev, next, likeBtn, dislikeBtn].forEach((b) => (b.disabled = kosong));
+
+    if (kosong) {
       text.textContent = "Belum ada fakta.";
       counter.textContent = "Fakta 0 dari 0";
-      prev.disabled = true;
-      next.disabled = true;
+      image.src = "assets/images/logo-sagu.png";
+      likeCount.textContent = "0";
+      dislikeCount.textContent = "0";
       return;
     }
+
     if (index >= facts.length) index = 0;
-    text.textContent = facts[index].text;
+    const f = facts[index];
+
+    text.textContent = f.text;
     counter.textContent = `Fakta ${index + 1} dari ${facts.length}`;
+    image.src = f.image || "assets/images/logo-sagu.png";
+    image.alt = f.text;
     prev.disabled = facts.length < 2;
     next.disabled = facts.length < 2;
+
+    renderVote();
+    muatTetangga();
   }
 
   function geser(arah) {
     if (facts.length < 2) return;
     index = (index + arah + facts.length) % facts.length;
 
-    text.classList.add("is-changing");
+    card.classList.add("is-changing");
     clearTimeout(changeTimer);
     changeTimer = setTimeout(() => {
       tampilkan();
-      text.classList.remove("is-changing");
+      card.classList.remove("is-changing");
     }, 200);
+  }
+
+  // klik sekali = pilih, klik lagi tombol yang sama = batal
+  function pilih(jenis, tombol) {
+    const f = facts[index];
+    if (!f) return;
+
+    const votes = bacaVote();
+    if (votes[f.id] === jenis) delete votes[f.id];
+    else votes[f.id] = jenis;
+    simpanVote(votes);
+    renderVote();
+
+    if (votes[f.id] === jenis) {
+      tombol.classList.remove("pop");
+      void tombol.offsetWidth; // biar animasinya bisa diulang
+      tombol.classList.add("pop");
+    }
   }
 
   function loadData() {
@@ -406,11 +478,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   prev.addEventListener("click", () => geser(-1));
   next.addEventListener("click", () => geser(1));
+  likeBtn.addEventListener("click", () => pilih("like", likeBtn));
+  dislikeBtn.addEventListener("click", () => pilih("dislike", dislikeBtn));
 
   loadData();
 
   window.addEventListener("storage", (e) => {
     if (e.key === SaguStore.DB_KEY) loadData();
+    if (e.key === VOTE_KEY && facts.length) renderVote();
   });
 });
 

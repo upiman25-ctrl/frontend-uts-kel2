@@ -55,6 +55,7 @@
 
   const REGION_FALLBACK = ["Papua", "Maluku", "Sulawesi", "Riau"];
   const unique = (list) => [...new Set(list.filter(Boolean))];
+  const acak1sampai10 = () => Math.floor(Math.random() * 10) + 1;
   const regionOptions = () => {
     const base = db.regions.length ? db.regions.map((r) => r.name) : REGION_FALLBACK;
     return unique([...base, ...db.foodOptions.wilayah]);
@@ -90,6 +91,8 @@
       singular: "tahap",
       prefix: "st",
       reorder: true,
+      noAdd: true,
+      noDelete: true,
       fields: [
         { name: "title", label: "Nama tahap", type: "text", required: true, wide: true },
         { name: "icon", label: "Ikon lingkaran", type: "image", required: true, maxSize: 300,
@@ -163,12 +166,25 @@
       title: "Fakta Menarik",
       singular: "fakta",
       prefix: "fc",
+      // angka like/dislike awal buat fakta baru, acak 1 - 10
+      defaults: () => ({ likes: acak1sampai10(), dislikes: acak1sampai10() }),
       fields: [
-        { name: "text", label: "Isi fakta", type: "textarea", required: true, wide: true }
+        { name: "text", label: "Isi fakta", type: "textarea", required: true, wide: true },
+        { name: "image", label: "Gambar ilustrasi", type: "image", required: true, wide: true, maxSize: 1200,
+          hint: "Gambar yang menggambarkan faktanya, rasio 3:2 paling pas (contoh 1536 x 1024)." },
+        { name: "likes", label: "Jumlah like awal", type: "number", required: true,
+          hint: "Angka awal tombol like di website." },
+        { name: "dislikes", label: "Jumlah dislike awal", type: "number", required: true,
+          hint: "Angka awal tombol dislike di website." }
       ],
       columns: [
         { key: "order", label: "No", type: "order" },
-        { key: "text", label: "Fakta", type: "clip", max: 140 }
+        { key: "image", label: "Gambar", type: "thumb", wide: true },
+        { key: "text", label: "Fakta", type: "clip", max: 110 },
+        { key: "likes", label: "Reaksi",
+          format: (f) => `<span class="reactions">
+            <span class="reaction"><img src="assets/icons/like.png" alt="Like" />${Number(f.likes) || 0}</span>
+            <span class="reaction"><img src="assets/icons/dislike.png" alt="Dislike" />${Number(f.dislikes) || 0}</span></span>` }
       ]
     },
 
@@ -347,6 +363,10 @@
         break;
       }
 
+      case "number":
+        control = `<input type="number" id="${id}" name="${field.name}" value="${esc(value ?? "")}" min="0" step="1" inputmode="numeric" ${req} ${describedBy} />`;
+        break;
+
       default:
         control = `<input type="text" id="${id}" name="${field.name}" value="${esc(value)}" ${req} ${describedBy} />`;
     }
@@ -382,9 +402,9 @@
     const values = {};
     fields.forEach((f) => {
       const raw = String(data.get(f.name) ?? "").trim();
-      values[f.name] = f.type === "list"
-        ? raw.split(",").map((s) => s.trim()).filter(Boolean)
-        : raw;
+      if (f.type === "list") values[f.name] = raw.split(",").map((s) => s.trim()).filter(Boolean);
+      else if (f.type === "number") values[f.name] = Math.max(0, parseInt(raw, 10) || 0);
+      else values[f.name] = raw;
     });
     return values;
   }
@@ -668,7 +688,6 @@
             <div class="data-tools">
               <button type="button" class="btn btn--primary btn--sm" data-action="export">Export JSON</button>
               <button type="button" class="btn btn--outline btn--sm" data-action="import">Import JSON</button>
-              <a href="index.html" target="_blank" rel="noopener" class="btn btn--outline btn--sm">Preview website</a>
               <button type="button" class="btn btn--danger btn--sm" data-action="reset">Kembalikan data awal</button>
             </div>
           </section>
@@ -686,7 +705,7 @@
         return `<span class="order-num">${pad(index + 1)}</span>`;
       case "thumb":
         return value
-          ? `<span class="media thumb ${col.round ? "thumb--round" : ""}"><img src="${esc(value)}" alt="" /></span>`
+          ? `<span class="media thumb ${col.round ? "thumb--round" : ""} ${col.wide ? "thumb--wide" : ""}"><img src="${esc(value)}" alt="" /></span>`
           : `<span class="media thumb is-missing" data-missing="kosong"></span>`;
       case "clip":
         return esc(clip(value, col.max));
@@ -711,7 +730,7 @@
               <label for="moduleSearch" class="sr-only">Cari ${esc(mod.singular)}</label>
               <input type="search" id="moduleSearch" class="input" placeholder="Cari ${esc(mod.singular)}…" autocomplete="off" />
             </div>
-            <button type="button" class="btn btn--primary btn--sm" data-action="add">+ Tambah ${esc(mod.singular)}</button>
+            ${mod.noAdd ? "" : `<button type="button" class="btn btn--primary btn--sm" data-action="add">+ Tambah ${esc(mod.singular)}</button>`}
           </div>
 
           ${mod.reorder ? `<p class="panel__note">Urutan di tabel ini sama dengan urutan tampil di website. Pakai tombol naik/turun untuk mengubahnya.</p>` : ""}
@@ -781,7 +800,7 @@
                   <button type="button" class="icon-btn" data-action="up" data-id="${id}" aria-label="Naikkan ${label}" ${index === 0 ? "disabled" : ""}>${ICON.up}</button>
                   <button type="button" class="icon-btn" data-action="down" data-id="${id}" aria-label="Turunkan ${label}" ${index === all.length - 1 ? "disabled" : ""}>${ICON.down}</button>` : ""}
                 <button type="button" class="btn btn--outline btn--xs" data-action="edit" data-id="${id}" aria-label="Edit ${label}">Edit</button>
-                <button type="button" class="btn btn--danger btn--xs" data-action="delete" data-id="${id}" aria-label="Hapus ${label}">Hapus</button>
+                ${mod.noDelete ? "" : `<button type="button" class="btn btn--danger btn--xs" data-action="delete" data-id="${id}" aria-label="Hapus ${label}">Hapus</button>`}
               </div>
             </td>
           </tr>`;
@@ -879,6 +898,7 @@
     const key = currentView;
     const mod = MODULES[key];
     if (!mod) return;
+    if ((action === "add" && mod.noAdd) || (action === "delete" && mod.noDelete)) return;
     const list = db[key];
     const index = list.findIndex((x) => x.id === id);
 
@@ -888,6 +908,7 @@
           title: `Tambah ${mod.singular}`,
           submitLabel: `Simpan ${mod.singular}`,
           fields: mod.fields,
+          values: mod.defaults ? mod.defaults() : {},
           onSubmit: (values) => {
             // ambil ulang db[key], siapa tau db nya udah diganti pas form kebuka
             db[key].push({ id: uid(mod.prefix), ...values });

@@ -291,20 +291,92 @@ const DEFAULT_DATA = {
     }
   ],
 
-  // fakta menarik
+  // fakta menarik, likes & dislikes = jumlah awal reaksinya
   facts: [
-    { id: "fc1", text: "Satu batang pohon sagu yang siap panen dapat menghasilkan ratusan kilogram pati sagu." },
-    { id: "fc2", text: "Indonesia memiliki hamparan hutan sagu terluas di dunia, dan sebagian besarnya berada di Papua." },
-    { id: "fc3", text: "Pohon sagu hanya berbunga satu kali seumur hidupnya. Setelah berbunga dan berbuah, batang pohon itu akan mati." },
-    { id: "fc4", text: "Sagu tumbuh berumpun dan terus memunculkan tunas anakan, sehingga satu rumpun bisa dipanen turun-temurun tanpa ditanam ulang." },
-    { id: "fc5", text: "Pohon sagu mampu tumbuh di rawa dan lahan gambut, tempat yang sulit ditanami padi maupun jagung." },
-    { id: "fc6", text: "Tepung sagu secara alami bebas gluten, sehingga aman bagi penderita intoleransi gluten." },
-    { id: "fc7", text: "Ulat sagu yang hidup di batang sagu yang membusuk dikonsumsi masyarakat Papua sebagai sumber protein." },
-    { id: "fc8", text: "Daun sagu dianyam menjadi atap rumbia, sedangkan pelepahnya (gaba-gaba) dipakai sebagai dinding rumah di Maluku." },
-    { id: "fc9", text: "Pada 2022, Maluku menyajikan 521 jenis olahan sagu dan tercatat sebagai pemecahan rekor MURI." },
-    { id: "fc10", text: "Pemerintah Provinsi Riau mencatat 369 produk makanan olahan berbahan dasar sagu." },
-    { id: "fc11", text: "Papeda disantap dengan cara digulung menggunakan sepasang sumpit kayu yang disebut gata-gata." },
-    { id: "fc12", text: "Selain pangan, pati sagu juga dimanfaatkan industri sebagai bahan perekat, kertas, dan plastik ramah lingkungan." }
+    {
+      id: "fc1",
+      text: "Satu batang pohon sagu yang siap panen dapat menghasilkan ratusan kilogram pati sagu.",
+      image: "assets/images/fkm-1.png",
+      likes: 9,
+      dislikes: 2
+    },
+    {
+      id: "fc2",
+      text: "Indonesia memiliki hamparan hutan sagu terluas di dunia, dan sebagian besarnya berada di Papua.",
+      image: "assets/images/fkm-2.png",
+      likes: 8,
+      dislikes: 1
+    },
+    {
+      id: "fc3",
+      text: "Pohon sagu hanya berbunga satu kali seumur hidupnya. Setelah berbunga dan berbuah, batang pohon itu akan mati.",
+      image: "assets/images/fkm-3.png",
+      likes: 7,
+      dislikes: 3
+    },
+    {
+      id: "fc4",
+      text: "Sagu tumbuh berumpun dan terus memunculkan tunas anakan, sehingga satu rumpun bisa dipanen turun-temurun tanpa ditanam ulang.",
+      image: "assets/images/fkm-4.png",
+      likes: 6,
+      dislikes: 2
+    },
+    {
+      id: "fc5",
+      text: "Pohon sagu mampu tumbuh di rawa dan lahan gambut, tempat yang sulit ditanami padi maupun jagung.",
+      image: "assets/images/fkm-5.png",
+      likes: 8,
+      dislikes: 4
+    },
+    {
+      id: "fc6",
+      text: "Tepung sagu secara alami bebas gluten, sehingga aman bagi penderita intoleransi gluten.",
+      image: "assets/images/fkm-6.png",
+      likes: 10,
+      dislikes: 1
+    },
+    {
+      id: "fc7",
+      text: "Ulat sagu yang hidup di batang sagu yang membusuk dikonsumsi masyarakat Papua sebagai sumber protein.",
+      image: "assets/images/fkm-7.png",
+      likes: 5,
+      dislikes: 6
+    },
+    {
+      id: "fc8",
+      text: "Daun sagu dianyam menjadi atap rumbia, sedangkan pelepahnya (gaba-gaba) dipakai sebagai dinding rumah di Maluku.",
+      image: "assets/images/fkm-8.png",
+      likes: 7,
+      dislikes: 2
+    },
+    {
+      id: "fc9",
+      text: "Pada 2022, Maluku menyajikan 521 jenis olahan sagu dan tercatat sebagai pemecahan rekor MURI.",
+      image: "assets/images/fkm-9.png",
+      likes: 9,
+      dislikes: 3
+    },
+    {
+      id: "fc10",
+      text: "Pemerintah Provinsi Riau mencatat 369 produk makanan olahan berbahan dasar sagu.",
+      image: "assets/images/fkm-10.png",
+      likes: 6,
+      dislikes: 3
+    },
+    {
+      id: "fc11",
+      text: "Papeda disantap dengan cara digulung menggunakan sepasang sumpit kayu yang disebut gata-gata.",
+      image: "assets/images/fkm-11.png",
+      likes: 10,
+      dislikes: 2
+    },
+    {
+      id: "fc12",
+      text: "Selain pangan, pati sagu juga dimanfaatkan industri sebagai bahan perekat, kertas, dan plastik ramah lingkungan.",
+      image: "assets/images/fkm-12.png",
+      likes: 8,
+      dislikes: 5
+    }
   ],
 
   // quiz
@@ -365,6 +437,13 @@ const SaguStore = (() => {
 
   const clone = (obj) => JSON.parse(JSON.stringify(obj));
 
+  // angka 1-10 dari id, jadi hasilnya selalu sama tiap halaman dibuka
+  function angkaAwal(teks) {
+    let total = 0;
+    for (const huruf of String(teks)) total += huruf.charCodeAt(0);
+    return (total % 10) + 1;
+  }
+
   function load() {
     try {
       const storedVersion = Number(localStorage.getItem(VERSION_KEY));
@@ -374,6 +453,14 @@ const SaguStore = (() => {
       // kalau ada bagian yang hilang (misal habis import json), isi pake data awal
       COLLECTIONS.forEach((key) => { if (!Array.isArray(db[key])) db[key] = clone(DEFAULT_DATA[key]); });
       db.settings = { ...clone(DEFAULT_DATA.settings), ...(db.settings || {}) };
+
+      // fakta yang kesimpen sebelum ada gambar & like/dislike dilengkapin dulu
+      db.facts.forEach((f) => {
+        const asal = DEFAULT_DATA.facts.find((d) => d.id === f.id);
+        if (!f.image && asal) f.image = asal.image;
+        if (typeof f.likes !== "number") f.likes = asal ? asal.likes : angkaAwal(f.id + "suka");
+        if (typeof f.dislikes !== "number") f.dislikes = asal ? asal.dislikes : angkaAwal(f.id + "ga");
+      });
 
       const opt = db.foodOptions || {};
       db.foodOptions = {};
