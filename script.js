@@ -339,9 +339,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   list.addEventListener("click", (e) => {
     const tombol = e.target.closest("[data-region]");
-    if (!tombol || tombol.dataset.region === activeId) return;
+    if (!tombol) return;
 
-    activeId = tombol.dataset.region;
+    // klik wilayah yang lagi aktif = tutup detailnya, balik ke tampilan awal
+    activeId = tombol.dataset.region === activeId ? null : tombol.dataset.region;
     renderList();
 
     // efek pudar dikit pas ganti wilayah
@@ -507,7 +508,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const poin = () => Math.round(100 / Math.max(quizzes.length, 1));
 
+  // acak urutan soal (fisher-yates), jadi tiap ulang quiz urutannya beda
+  function acak(list) {
+    const hasil = [...list];
+    for (let i = hasil.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [hasil[i], hasil[j]] = [hasil[j], hasil[i]];
+    }
+    return hasil;
+  }
+
   function mulaiUlang() {
+    quizzes = acak(quizzes);
     index = 0;
     score = 0;
     pernahSalah = false;

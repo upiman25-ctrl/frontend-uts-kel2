@@ -410,6 +410,36 @@ const DEFAULT_DATA = {
       question: "Mengapa sagu cocok dikonsumsi oleh penderita intoleransi gluten?",
       optionA: "Karena sagu bebas gluten", optionB: "Karena sagu tinggi protein", optionC: "Karena sagu mengandung gula", optionD: "Karena sagu berasal dari biji-bijian",
       correct: "A"
+    },
+    {
+      id: "qz6",
+      question: "Berapa kali pohon sagu berbunga sepanjang hidupnya?",
+      optionA: "Setiap tahun", optionB: "Dua kali", optionC: "Satu kali", optionD: "Tidak pernah berbunga",
+      correct: "C"
+    },
+    {
+      id: "qz7",
+      question: "Sepasang sumpit kayu yang dipakai untuk menggulung papeda disebut…",
+      optionA: "Gaba-gaba", optionB: "Gata-gata", optionC: "Tumbu", optionD: "Lempeng",
+      correct: "B"
+    },
+    {
+      id: "qz8",
+      question: "Pada tahun 2022, Maluku memecahkan rekor MURI dengan menyajikan berapa jenis olahan sagu?",
+      optionA: "125 jenis", optionB: "369 jenis", optionC: "521 jenis", optionD: "1.000 jenis",
+      correct: "C"
+    },
+    {
+      id: "qz9",
+      question: "Pohon sagu mampu tumbuh dengan baik di lahan jenis apa?",
+      optionA: "Gurun pasir", optionB: "Rawa dan lahan gambut", optionC: "Pegunungan bersalju", optionD: "Tanah kapur kering",
+      correct: "B"
+    },
+    {
+      id: "qz10",
+      question: "Daun pohon sagu biasanya dimanfaatkan masyarakat sebagai…",
+      optionA: "Atap rumbia", optionB: "Bahan bakar kendaraan", optionC: "Pewarna kain", optionD: "Pupuk kimia",
+      correct: "A"
     }
   ],
 
@@ -432,7 +462,8 @@ const SaguStore = (() => {
   // nama key dibedain dari UTS-Trial biar datanya ga ketuker kalau dibuka di browser yg sama
   const DB_KEY = "webSagu_db";
   const VERSION_KEY = "webSagu_dbVersion";
-  const DB_VERSION = 1;
+  // versi 2: nambah soal quiz qz6 - qz10
+  const DB_VERSION = 2;
   const COLLECTIONS = ["aboutCards", "processingSteps", "foods", "regions", "facts", "quizzes"];
 
   const clone = (obj) => JSON.parse(JSON.stringify(obj));
@@ -448,7 +479,9 @@ const SaguStore = (() => {
     try {
       const storedVersion = Number(localStorage.getItem(VERSION_KEY));
       const raw = localStorage.getItem(DB_KEY);
-      if (!raw || storedVersion !== DB_VERSION) return reset(false);
+      // data versi 1 masih dipakai (biar editan admin ga hilang), cuma ditambahin soal quiz baru
+      const upgradeDariV1 = storedVersion === 1;
+      if (!raw || (storedVersion !== DB_VERSION && !upgradeDariV1)) return reset(false);
       const db = JSON.parse(raw);
       // kalau ada bagian yang hilang (misal habis import json), isi pake data awal
       COLLECTIONS.forEach((key) => { if (!Array.isArray(db[key])) db[key] = clone(DEFAULT_DATA[key]); });
@@ -467,6 +500,14 @@ const SaguStore = (() => {
       Object.keys(DEFAULT_DATA.foodOptions).forEach((key) => {
         db.foodOptions[key] = Array.isArray(opt[key]) ? opt[key] : clone(DEFAULT_DATA.foodOptions[key]);
       });
+
+      if (upgradeDariV1) {
+        const baru = ["qz6", "qz7", "qz8", "qz9", "qz10"];
+        DEFAULT_DATA.quizzes
+          .filter((q) => baru.includes(q.id) && !db.quizzes.some((x) => x.id === q.id))
+          .forEach((q) => db.quizzes.push(clone(q)));
+        save(db);
+      }
       return db;
     } catch (err) {
       console.error("data di localStorage rusak, balik ke data awal", err);
