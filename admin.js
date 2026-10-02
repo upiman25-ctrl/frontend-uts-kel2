@@ -216,7 +216,13 @@
     { name: "heroEyebrow", label: "Teks kecil di atas judul hero", type: "text", wide: true },
     { name: "heroDescription", label: "Deskripsi hero", type: "textarea", wide: true },
     { name: "footerText", label: "Teks footer", type: "textarea", required: true, wide: true },
-    { name: "copyright", label: "Teks hak cipta", type: "text", wide: true }
+    { name: "copyright", label: "Teks hak cipta", type: "text", wide: true },
+    { name: "heroImage", label: "Gambar hero", type: "image", required: true, wide: true, maxSize: 1200,
+      hint: "Foto besar di sisi kanan hero. Bentuknya potret (tinggi), sebaiknya pakai foto tegak." },
+    { name: "footerImageLeft", label: "Gambar footer kiri", type: "image", required: true, maxSize: 600,
+      hint: "Dipotong jadi persegi." },
+    { name: "footerImageRight", label: "Gambar footer kanan", type: "image", required: true, maxSize: 600,
+      hint: "Dipotong jadi persegi." }
   ];
 
   // judul yang muncul di topbar
@@ -409,6 +415,47 @@
     return values;
   }
 
+  // dipanggil pas admin milih file di field gambar (form popup & halaman pengaturan)
+  async function uploadImage(input, fields) {
+    const file = input.files[0];
+    if (!file) return;
+    const box = input.closest(".field");
+    const field = fields.find((f) => f.name === input.dataset.upload);
+    const hidden = box.querySelector('input[type="hidden"]');
+    const nameEl = box.querySelector(".field__filename");
+    const preview = box.querySelector(".field__preview");
+    const oldName = nameEl.textContent;
+
+    if (!file.type.startsWith("image/")) {
+      Toast.show("File yang dipilih bukan gambar.", "error");
+      input.value = "";
+      return;
+    }
+    if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
+      Toast.show(`Ukuran gambar maksimal ${MAX_UPLOAD_MB} MB.`, "error");
+      input.value = "";
+      return;
+    }
+
+    nameEl.textContent = "Memproses gambar…";
+    try {
+      const dataUrl = await imageToDataURL(file, field?.maxSize || 1200);
+      hidden.value = dataUrl;
+      preview.classList.remove("is-missing");
+      preview.querySelector("img").src = dataUrl;
+      nameEl.textContent = file.name;
+      box.querySelector(".field__pick").textContent = "Ganti gambar";
+      input.setCustomValidity("");
+      box.classList.remove("is-invalid");
+    } catch (err) {
+      console.error(err);
+      nameEl.textContent = oldName;
+      Toast.show("Gambar gagal dibaca, coba pilih file lain.", "error");
+    } finally {
+      input.value = ""; // biar file yang sama bisa dipilih lagi
+    }
+  }
+
   // ---------- toast, konfirmasi, form popup, sidebar ----------
   const Toast = {
     timer: null,
@@ -504,45 +551,9 @@
     },
 
     async handleUpload(input) {
-      const file = input.files[0];
-      if (!file) return;
-      const box = input.closest(".field");
-      const field = this.fields.find((f) => f.name === input.dataset.upload);
-      const hidden = box.querySelector('input[type="hidden"]');
-      const nameEl = box.querySelector(".field__filename");
-      const preview = box.querySelector(".field__preview");
-      const oldName = nameEl.textContent;
-
-      if (!file.type.startsWith("image/")) {
-        Toast.show("File yang dipilih bukan gambar.", "error");
-        input.value = "";
-        return;
-      }
-      if (file.size > MAX_UPLOAD_MB * 1024 * 1024) {
-        Toast.show(`Ukuran gambar maksimal ${MAX_UPLOAD_MB} MB.`, "error");
-        input.value = "";
-        return;
-      }
-
       this.busy++;
-      nameEl.textContent = "Memproses gambar…";
-      try {
-        const dataUrl = await imageToDataURL(file, field?.maxSize || 1200);
-        hidden.value = dataUrl;
-        preview.classList.remove("is-missing");
-        preview.querySelector("img").src = dataUrl;
-        nameEl.textContent = file.name;
-        box.querySelector(".field__pick").textContent = "Ganti gambar";
-        input.setCustomValidity("");
-        box.classList.remove("is-invalid");
-      } catch (err) {
-        console.error(err);
-        nameEl.textContent = oldName;
-        Toast.show("Gambar gagal dibaca, coba pilih file lain.", "error");
-      } finally {
-        this.busy--;
-        input.value = ""; // biar file yang sama bisa dipilih lagi
-      }
+      try { await uploadImage(input, this.fields); }
+      finally { this.busy--; }
     },
 
     // kalau yang dipilih "+ Tambah ...", munculin kotak isian
@@ -826,9 +837,20 @@
         </section>`;
 
       const form = $("#settingsForm");
+      let busy = 0; // jumlah gambar yang lagi diproses
       form.addEventListener("input", (e) => e.target.setCustomValidity?.(""));
+      form.addEventListener("change", async (e) => {
+        if (!e.target.matches("[data-upload]")) return;
+        busy++;
+        try { await uploadImage(e.target, SETTINGS_FIELDS); }
+        finally { busy--; }
+      });
       form.addEventListener("submit", (e) => {
         e.preventDefault();
+        if (busy) {
+          Toast.show("Tunggu sebentar, gambar masih diproses.", "error");
+          return;
+        }
         if (!validateForm(form, SETTINGS_FIELDS)) return;
         db.settings = { ...db.settings, ...collectValues(form, SETTINGS_FIELDS) };
         persist("Ubah", "Pengaturan", "Pengaturan website diperbarui");

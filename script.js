@@ -41,6 +41,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const value = settings[el.dataset.setting];
       if (value) el.textContent = value;
     });
+    // gambar hero & footer
+    document.querySelectorAll("[data-setting-src]").forEach((img) => {
+      const src = settings[img.dataset.settingSrc];
+      if (src && img.getAttribute("src") !== src) img.src = src;
+    });
     document.title = settings.siteName;
   }
 

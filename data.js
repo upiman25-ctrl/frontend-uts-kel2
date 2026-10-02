@@ -452,7 +452,10 @@ const DEFAULT_DATA = {
       "Sagu merupakan salah satu sumber pangan tradisional Indonesia yang telah menjadi makanan pokok masyarakat selama ratusan tahun, khususnya di wilayah timur Indonesia. Website ini mengajak pengguna untuk mengenal sejarah, budaya, dan ragam kuliner berbahan dasar sagu.",
     footerText:
       "Sagu Nusantara dibuat untuk mengedukasi masyarakat mengenai sagu sebagai makanan pokok tradisional Indonesia yang mulai terlupakan, serta memperkenalkan ragam kuliner nusantara berbahan dasar sagu kepada generasi muda.",
-    copyright: "© Sagu Nusantara. Front-End UTS Project - Kelompok 02."
+    copyright: "© Sagu Nusantara. Front-End UTS Project - Kelompok 02.",
+    heroImage: "assets/images/hero-hutan-sagu.jpg",
+    footerImageLeft: "assets/images/footer-kiri.jpg",
+    footerImageRight: "assets/images/footer-kanan.jpg"
   }
 };
 
