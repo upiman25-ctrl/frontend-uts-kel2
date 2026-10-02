@@ -1,6 +1,6 @@
 # Sagu Nusantara
 
-Proyek ini adalah sebuah website edukasi tentang sagu sebagai pangan warisan Nusantara yang dinamis dan interaktif, lengkap dengan dashboard admin untuk mengelola isinya. Dibuat untuk memenuhi tugas mata kuliah Front End Programming.
+Proyek ini adalah sebuah website edukasi tentang sagu sebagai pangan warisan Nusantara yang dinamis dan interaktif, lengkap dengan dashboard admin untuk mengelola isinya. Dibuat untuk memenuhi tugas Ujian Tengah Semester mata kuliah Front End Programming.
 
 ## Tim Pengembang
 
